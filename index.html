@@ -4,18 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#087ea4" />
-  <title>Foto Turismo V2.3</title>
+  <title>Foto Turismo V2.4</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <header>
-  <div><strong>Foto Turismo</strong><small>Recorte, chroma key e molduras turísticas</small></div>
+  <div><strong>Foto Turismo</strong><small>V2.4 • Polaroid 3D Praia do Forte</small></div>
   <button id="installBtn" hidden>Instalar</button>
 </header>
 <main>
   <section class="stage-card">
-    <canvas id="canvas" width="1122" height="1402" aria-label="Pré-visualização"></canvas>
+    <canvas id="canvas" width="1024" height="1536" aria-label="Pré-visualização"></canvas>
     <p class="hint" id="hint">Arraste a foto com um dedo. Use o zoom para ajustar.</p>
   </section>
 
@@ -44,14 +44,14 @@
     </div>
 
     <div id="backgroundPanel" class="panel" hidden>
-      <label>Fundo após o recorte
+      <label>Fundo atrás da pessoa
         <select id="backgroundMode">
-          <option value="continuation">Continuação da moldura</option>
+          <option value="scene">Cenário da Praia do Forte</option>
           <option value="blur">Foto desfocada</option>
           <option value="white">Branco</option>
-          <option value="transparent">Transparente</option>
         </select>
       </label>
+      <p>Nesta versão, a pessoa fica entre o cenário completo e a moldura frontal 3D.</p>
     </div>
 
     <div id="chromaPanel" class="panel" hidden>
@@ -64,10 +64,9 @@
     </div>
 
     <div id="autoPanel" class="panel" hidden>
-      <p>O recorte usa inteligência artificial para identificar a pessoa. Na primeira utilização, aguarde alguns segundos para carregar o modelo.</p>
+      <p>O recorte automático continua disponível para testes. Para melhor resultado, use uma foto com a pessoa bem destacada do fundo.</p>
       <label>Preservar detalhes <input id="autoSensitivity" type="range" min="20" max="190" value="120" /></label>
       <label>Suavidade <input id="autoSoftness" type="range" min="0" max="100" value="22" /></label>
-      <label>Limpeza de resíduos <input id="cleanup" type="range" min="0" max="4" value="0" /></label>
       <button id="recalcAutoBtn">🔄 Recalcular recorte</button>
     </div>
 
@@ -78,7 +77,7 @@
       <label id="shadowLabel" hidden>Sombra <input id="shadow" type="range" min="0" max="40" value="10" /></label>
     </div>
 
-    <h2>Molduras</h2><div id="frames" class="frames"></div>
+    <h2>Molduras 3D</h2><div id="frames" class="frames"></div>
     <div class="button-grid action-grid">
       <button id="saveBtn" class="primary">💾 Salvar foto</button>
       <button id="shareBtn">📤 Compartilhar</button>
@@ -86,7 +85,7 @@
     </div>
   </section>
 </main>
-<footer>Versão 2.3 • Processamento local no aparelho</footer>
+<footer>Versão 2.4 • Praia do Forte • 2 modelos de Polaroid 3D</footer>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
 <script src="app.js"></script>
 </body>

@@ -1,9 +1,10 @@
-FOTO TURISMO V1.0
+FOTO TURISMO V2.0
 
-1. Publique esta pasta em um serviço HTTPS, como GitHub Pages ou Firebase Hosting.
-2. Abra o endereço no celular.
-3. Use Fotografar ou Galeria.
-4. Escolha a moldura, arraste a fotografia e ajuste o zoom.
-5. Salve ou compartilhe.
+Novidades:
+- Modo normal
+- Chroma key com cor, tolerância, suavidade e redução de reflexo verde
+- Recorte automático experimental baseado no fundo dos cantos
+- Fundo com continuação da moldura, foto desfocada, branco ou transparente
+- Sombra para integrar a pessoa ao cenário
 
-Observação: câmera e instalação PWA exigem HTTPS, exceto em localhost.
+Observação: o recorte automático funciona no próprio aparelho e não envia fotos para servidor. Para cabelos e fundos complexos, o chroma key com boa iluminação produz o melhor resultado.

@@ -1,11 +1,7 @@
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
-const cameraInput=document.getElementById('cameraInput');
-const galleryInput=document.getElementById('galleryInput');
-const zoomEl=document.getElementById('zoom');
-const brightnessEl=document.getElementById('brightness');
-const contrastEl=document.getElementById('contrast');
-
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+const cameraInput=$('cameraInput'),galleryInput=$('galleryInput');
+const zoomEl=$('zoom'),brightnessEl=$('brightness'),contrastEl=$('contrast'),shadowEl=$('shadow');
 const frames=[
  {name:'Praia do Forte',file:'assets/frames/praia-do-forte.png',thumb:'assets/frames/praia-do-forte-original.png',box:[196,202,905,962]},
  {name:'Ilha do Japonês',file:'assets/frames/ilha-do-japones.png',thumb:'assets/frames/ilha-do-japones-original.png',box:[210,205,909,974]},
@@ -15,31 +11,35 @@ const frames=[
  {name:'Forte São Mateus',file:'assets/frames/forte-sao-mateus.png',thumb:'assets/frames/forte-sao-mateus-original.png',box:[200,200,905,965]},
  {name:'Praia do Peró',file:'assets/frames/praia-do-pero.png',thumb:'assets/frames/praia-do-pero-original.png',box:[205,200,905,951]}
 ];
-let frameIndex=0, frameImg=new Image(), photo=null;
-let scale=1, offsetX=0, offsetY=0, rotation=0;
-let dragging=false,lastX=0,lastY=0,pinchStart=0,pinchScale=1;
+let frameIndex=0,overlayImg=new Image(),baseImg=new Image(),photo=null,processed=null;
+let scale=1,offsetX=0,offsetY=0,rotation=0,mode='normal',dragging=false,lastX=0,lastY=0,pickingColor=false;
+const work=document.createElement('canvas'),wctx=work.getContext('2d',{willReadFrequently:true});
 
-function loadFrame(i){frameIndex=i;frameImg=new Image();frameImg.onload=draw;frameImg.src=frames[i].file;document.querySelectorAll('.frame-card').forEach((e,j)=>e.classList.toggle('active',i===j));}
-function buildFrames(){const box=document.getElementById('frames');frames.forEach((f,i)=>{const d=document.createElement('button');d.className='frame-card';d.innerHTML=`<img src="${f.thumb}" alt="${f.name}"><span>${f.name}</span>`;d.onclick=()=>loadFrame(i);box.appendChild(d);});}
-function coverScale(){if(!photo)return 1;const [x1,y1,x2,y2]=frames[frameIndex].box;return Math.max((x2-x1)/photo.width,(y2-y1)/photo.height);}
-function fitPhoto(){if(!photo)return;scale=coverScale();zoomEl.value=1;offsetX=0;offsetY=0;rotation=0;draw();}
-function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);if(photo){const [x1,y1,x2,y2]=frames[frameIndex].box;ctx.save();ctx.beginPath();ctx.rect(x1,y1,x2-x1,y2-y1);ctx.clip();ctx.filter=`brightness(${brightnessEl.value}%) contrast(${contrastEl.value}%)`;ctx.translate((x1+x2)/2+offsetX,(y1+y2)/2+offsetY);ctx.rotate(rotation*Math.PI/180);const s=scale*Number(zoomEl.value);ctx.drawImage(photo,-photo.width*s/2,-photo.height*s/2,photo.width*s,photo.height*s);ctx.restore();ctx.filter='none';}if(frameImg.complete)ctx.drawImage(frameImg,0,0,canvas.width,canvas.height);}
-function loadFile(file){if(!file)return;const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{photo=img;fitPhoto();URL.revokeObjectURL(url)};img.src=url;}
+function loadFrame(i){frameIndex=i;overlayImg=new Image();baseImg=new Image();let n=0;const done=()=>{if(++n===2)draw()};overlayImg.onload=done;baseImg.onload=done;overlayImg.src=frames[i].file;baseImg.src=frames[i].thumb;document.querySelectorAll('.frame-card').forEach((e,j)=>e.classList.toggle('active',i===j));}
+function buildFrames(){const box=$('frames');frames.forEach((f,i)=>{const b=document.createElement('button');b.className='frame-card';b.innerHTML=`<img src="${f.thumb}" alt="${f.name}"><span>${f.name}</span>`;b.onclick=()=>loadFrame(i);box.appendChild(b)});}
+function coverScale(){if(!photo)return 1;const [x1,y1,x2,y2]=frames[frameIndex].box;return Math.max((x2-x1)/photo.width,(y2-y1)/photo.height)}
+function fitPhoto(){if(!photo)return;scale=coverScale();zoomEl.value=1;offsetX=offsetY=rotation=0;draw()}
+function hexRGB(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function dist(r,g,b,c){return Math.hypot(r-c[0],g-c[1],b-c[2])}
+function cornerColor(data,w,h){const pts=[[8,8],[w-9,8],[8,h-9],[w-9,h-9]];let r=0,g=0,b=0;for(const [x,y] of pts){const i=(y*w+x)*4;r+=data[i];g+=data[i+1];b+=data[i+2]}return [r/4,g/4,b/4]}
+function processPhoto(){if(!photo||mode==='normal'){processed=photo;return}const max=1400,ratio=Math.min(1,max/Math.max(photo.width,photo.height));work.width=Math.max(1,Math.round(photo.width*ratio));work.height=Math.max(1,Math.round(photo.height*ratio));wctx.clearRect(0,0,work.width,work.height);wctx.drawImage(photo,0,0,work.width,work.height);const im=wctx.getImageData(0,0,work.width,work.height),d=im.data;const key=mode==='chroma'?hexRGB($('chromaColor').value):cornerColor(d,work.width,work.height);const tol=mode==='chroma'?+$('tolerance').value:+$('autoSensitivity').value,soft=mode==='chroma'?+$('softness').value:+$('autoSoftness').value,spill=+$('spill').value/100;
+ for(let i=0;i<d.length;i+=4){const dd=dist(d[i],d[i+1],d[i+2],key);let a;if(dd<=tol)a=0;else if(dd<tol+soft)a=255*(dd-tol)/Math.max(1,soft);else a=255;d[i+3]=Math.min(d[i+3],a);if(mode==='chroma'&&a>0&&spill>0){const dominance=d[i+1]-Math.max(d[i],d[i+2]);if(dominance>10){const sub=dominance*spill;d[i+1]=Math.max(0,d[i+1]-sub);d[i]=Math.min(255,d[i]+sub*.18);d[i+2]=Math.min(255,d[i+2]+sub*.18)}}}
+ wctx.putImageData(im,0,0);processed=work;
+}
+function drawContinuation(x1,y1,x2,y2){const w=x2-x1,h=y2-y1;if(!baseImg.complete)return;const sw=baseImg.naturalWidth,sh=baseImg.naturalHeight;ctx.save();ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();const left=Math.max(1,Math.round(x1)),right=Math.max(1,Math.round(sw-x2));ctx.globalAlpha=.95;ctx.drawImage(baseImg,0,y1,left,h,x1,y1,w*.52,h);ctx.drawImage(baseImg,x2,y1,right,h,x1+w*.48,y1,w*.52,h);const grad=ctx.createLinearGradient(x1,y1,x2,y1);grad.addColorStop(0,'rgba(255,255,255,0)');grad.addColorStop(.45,'rgba(255,255,255,.18)');grad.addColorStop(.55,'rgba(255,255,255,.18)');grad.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=grad;ctx.fillRect(x1,y1,w,h);ctx.restore()}
+function drawBackground(x1,y1,x2,y2){const m=$('backgroundMode').value,w=x2-x1,h=y2-y1;if(mode==='normal')return;if(m==='continuation')drawContinuation(x1,y1,x2,y2);else if(m==='blur'&&photo){ctx.save();ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();ctx.filter='blur(22px) brightness(85%)';const s=Math.max(w/photo.width,h/photo.height)*1.12;ctx.drawImage(photo,(x1+x2)/2-photo.width*s/2,(y1+y2)/2-photo.height*s/2,photo.width*s,photo.height*s);ctx.restore();ctx.filter='none'}else if(m==='white'){ctx.fillStyle='#fff';ctx.fillRect(x1,y1,w,h)} }
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);const [x1,y1,x2,y2]=frames[frameIndex].box;drawBackground(x1,y1,x2,y2);if(photo){processPhoto();ctx.save();ctx.beginPath();ctx.rect(x1,y1,x2-x1,y2-y1);ctx.clip();ctx.filter=`brightness(${brightnessEl.value}%) contrast(${contrastEl.value}%)`;ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=mode==='normal'?0:+shadowEl.value;ctx.shadowOffsetY=mode==='normal'?0:+shadowEl.value*.35;ctx.translate((x1+x2)/2+offsetX,(y1+y2)/2+offsetY);ctx.rotate(rotation*Math.PI/180);const s=scale*+zoomEl.value;const pw=processed.width||photo.width,ph=processed.height||photo.height;ctx.drawImage(processed,-pw*s/2,-ph*s/2,pw*s,ph*s);ctx.restore();ctx.filter='none'}if(overlayImg.complete)ctx.drawImage(overlayImg,0,0,canvas.width,canvas.height)}
+function loadFile(file){if(!file)return;const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{photo=img;processed=img;fitPhoto();URL.revokeObjectURL(url)};img.src=url}
 cameraInput.onchange=e=>loadFile(e.target.files[0]);galleryInput.onchange=e=>loadFile(e.target.files[0]);
-zoomEl.oninput=brightnessEl.oninput=contrastEl.oninput=draw;
-document.getElementById('fitBtn').onclick=fitPhoto;
-document.getElementById('rotateBtn').onclick=()=>{rotation=(rotation+90)%360;draw()};
-document.getElementById('resetBtn').onclick=()=>{photo=null;scale=1;offsetX=offsetY=rotation=0;zoomEl.value=1;brightnessEl.value=contrastEl.value=100;draw()};
-
-canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.offsetX;lastY=e.offsetY;canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointermove',e=>{if(!dragging||!photo)return;const sx=canvas.width/canvas.clientWidth,sy=canvas.height/canvas.clientHeight;offsetX+=(e.offsetX-lastX)*sx;offsetY+=(e.offsetY-lastY)*sy;lastX=e.offsetX;lastY=e.offsetY;draw()});
-canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
-canvas.addEventListener('wheel',e=>{e.preventDefault();zoomEl.value=Math.min(4,Math.max(.4,Number(zoomEl.value)+(e.deltaY<0?.05:-.05)));draw()},{passive:false});
-
-async function makeBlob(){return await new Promise(r=>canvas.toBlob(r,'image/jpeg',.95));}
-document.getElementById('saveBtn').onclick=async()=>{const blob=await makeBlob();const a=document.createElement('a');a.href=URL.createObjectURL(blob);const n=String(Date.now()).slice(-6);a.download=`foto-turismo-${n}.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
-document.getElementById('shareBtn').onclick=async()=>{const blob=await makeBlob();const file=new File([blob],'foto-turismo.jpg',{type:'image/jpeg'});if(navigator.canShare?.({files:[file]})){await navigator.share({title:'Foto Turismo',text:'Minha foto turística',files:[file]});}else{alert('O compartilhamento direto não é suportado neste navegador. Use Salvar foto.')}};
-
-let deferredPrompt;const installBtn=document.getElementById('installBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.hidden=false});installBtn.onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.hidden=true};
-if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js');
-buildFrames();loadFrame(0);draw();
+[zoomEl,brightnessEl,contrastEl,shadowEl,$('tolerance'),$('softness'),$('spill'),$('autoSensitivity'),$('autoSoftness')].forEach(e=>e.oninput=draw);$('backgroundMode').onchange=draw;$('chromaColor').oninput=draw;
+$('fitBtn').onclick=fitPhoto;$('rotateBtn').onclick=()=>{rotation=(rotation+90)%360;draw()};$('recalcAutoBtn').onclick=draw;
+$('resetBtn').onclick=()=>{photo=null;processed=null;scale=1;offsetX=offsetY=rotation=0;zoomEl.value=1;brightnessEl.value=contrastEl.value=100;draw()};
+$('modeButtons').onclick=e=>{const b=e.target.closest('button[data-mode]');if(!b)return;mode=b.dataset.mode;document.querySelectorAll('#modeButtons button').forEach(x=>x.classList.toggle('active',x===b));$('chromaPanel').hidden=mode!=='chroma';$('autoPanel').hidden=mode!=='auto';$('backgroundPanel').hidden=mode==='normal';draw()};
+$('pickColorBtn').onclick=()=>{pickingColor=true;$('pickColorBtn').textContent='Toque na cor do fundo na foto'};
+canvas.addEventListener('pointerdown',e=>{if(pickingColor&&photo){const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*canvas.width/r.width,y=(e.clientY-r.top)*canvas.height/r.height;const [x1,y1,x2,y2]=frames[frameIndex].box;if(x>=x1&&x<=x2&&y>=y1&&y<=y2){const px=ctx.getImageData(x,y,1,1).data;$('chromaColor').value='#'+[px[0],px[1],px[2]].map(v=>v.toString(16).padStart(2,'0')).join('');pickingColor=false;$('pickColorBtn').textContent='🎯 Escolher cor na foto';draw()}return}dragging=true;lastX=e.offsetX;lastY=e.offsetY;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{if(!dragging||!photo)return;const sx=canvas.width/canvas.clientWidth,sy=canvas.height/canvas.clientHeight;offsetX+=(e.offsetX-lastX)*sx;offsetY+=(e.offsetY-lastY)*sy;lastX=e.offsetX;lastY=e.offsetY;draw()});canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
+async function makeBlob(){return new Promise(r=>canvas.toBlob(r,'image/jpeg',.95))}
+$('saveBtn').onclick=async()=>{const blob=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`foto-turismo-v2-${String(Date.now()).slice(-6)}.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$('shareBtn').onclick=async()=>{const blob=await makeBlob(),file=new File([blob],'foto-turismo-v2.jpg',{type:'image/jpeg'});if(navigator.canShare?.({files:[file]}))await navigator.share({title:'Foto Turismo',text:'Minha foto turística',files:[file]});else alert('Use o botão Salvar foto neste navegador.')};
+let deferredPrompt;const installBtn=$('installBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.hidden=false});installBtn.onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.hidden=true};
+if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js');buildFrames();loadFrame(0);draw();

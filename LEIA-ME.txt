@@ -1,4 +1,4 @@
-FOTO TURISMO V2.1
+FOTO TURISMO V2.2
 
 Novidades:
 - enquadramento Preencher/Foto completa no modo normal;

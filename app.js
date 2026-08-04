@@ -3,8 +3,8 @@ const canvas=$('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
 const cameraInput=$('cameraInput'),galleryInput=$('galleryInput');
 const zoomEl=$('zoom'),brightnessEl=$('brightness'),contrastEl=$('contrast'),shadowEl=$('shadow');
 const frames=[
- {name:'Praia do Forte 3D Suave',subtitle:'Modelo elegante',bg:'assets/frames/praia-do-forte-3d-bg.png',front:'assets/frames/praia-do-forte-3d-suave-front.png',thumb:'assets/frames/praia-do-forte-3d-suave-thumb.png',box:[128,228,898,994]},
- {name:'Praia do Forte 3D Destaque',subtitle:'Modelo impactante',bg:'assets/frames/praia-do-forte-3d-bg.png',front:'assets/frames/praia-do-forte-3d-bold-front.png',thumb:'assets/frames/praia-do-forte-3d-bold-thumb.png',box:[140,221,873,983]}
+ {name:'Praia do Forte 3D Suave',subtitle:'Modelo elegante',bg:'praia-do-forte-3d-bg.png',front:'praia-do-forte-3d-suave-front.png',thumb:'praia-do-forte-3d-suave-thumb.png',box:[128,228,898,994]},
+ {name:'Praia do Forte 3D Destaque',subtitle:'Modelo impactante',bg:'praia-do-forte-3d-bg.png',front:'praia-do-forte-3d-bold-front.png',thumb:'praia-do-forte-3d-bold-thumb.png',box:[140,221,873,983]}
 ];
 let frameIndex=0,bgImg=new Image(),frontImg=new Image(),photo=null,processed=null,alphaBounds=null;
 let scale=1,offsetX=0,offsetY=0,rotation=0,mode='normal',dragging=false,lastX=0,lastY=0,pickingColor=false,processKey='';
@@ -13,7 +13,7 @@ const work=document.createElement('canvas'),wctx=work.getContext('2d',{willReadF
 const maskCanvas=document.createElement('canvas'),mctx=maskCanvas.getContext('2d',{willReadFrequently:true});
 
 function invalidate(){processKey='';}
-function loadFrame(i){frameIndex=i;bgImg=new Image();frontImg=new Image();let n=0;const done=()=>{if(++n===2){if(photo)fitPhoto();draw()}};bgImg.onload=done;frontImg.onload=done;bgImg.src=frames[i].bg;frontImg.src=frames[i].front;document.querySelectorAll('.frame-card').forEach((e,j)=>e.classList.toggle('active',i===j));}
+function loadFrame(i){frameIndex=i;bgImg=new Image();frontImg=new Image();let n=0;const done=()=>{if(++n===2){if(photo)fitPhoto();draw()}};bgImg.onload=done;frontImg.onload=done;bgImg.onerror=()=>{$('hint').textContent='Fundo não encontrado. Confirme se os arquivos PNG estão na página principal do GitHub.';};frontImg.onerror=()=>{$('hint').textContent='Moldura não encontrada. Confirme se os arquivos PNG estão na página principal do GitHub.';};const v='?v=241';bgImg.src=frames[i].bg+v;frontImg.src=frames[i].front+v;document.querySelectorAll('.frame-card').forEach((e,j)=>e.classList.toggle('active',i===j));}
 function buildFrames(){const box=$('frames');frames.forEach((f,i)=>{const b=document.createElement('button');b.className='frame-card';b.innerHTML=`<img src="${f.thumb}" alt="${f.name}"><span>${f.name}</span><small>${f.subtitle}</small>`;b.onclick=()=>loadFrame(i);box.appendChild(b)});}
 function targetSize(){const [x1,y1,x2,y2]=frames[frameIndex].box;return [x2-x1,y2-y1];}
 function baseScale(contain=false){if(!photo)return 1;const [w,h]=targetSize();return (contain?Math.min:Math.max)(w/photo.width,h/photo.height);}
@@ -82,7 +82,7 @@ canvas.addEventListener('pointerdown',e=>{if(pickingColor&&photo){const r=canvas
 canvas.addEventListener('pointermove',e=>{if(!dragging||!photo)return;const sx=canvas.width/canvas.clientWidth,sy=canvas.height/canvas.clientHeight;offsetX+=(e.offsetX-lastX)*sx;offsetY+=(e.offsetY-lastY)*sy;lastX=e.offsetX;lastY=e.offsetY;draw();});
 canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
 async function makeBlob(){return new Promise(r=>canvas.toBlob(r,'image/jpeg',.96));}
-$('saveBtn').onclick=async()=>{const blob=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`foto-turismo-v24-${String(Date.now()).slice(-6)}.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
-$('shareBtn').onclick=async()=>{const blob=await makeBlob(),file=new File([blob],'foto-turismo-v24.jpg',{type:'image/jpeg'});if(navigator.canShare?.({files:[file]}))await navigator.share({title:'Foto Turismo',text:'Minha foto turística',files:[file]});else alert('Use o botão Salvar foto neste navegador.');};
+$('saveBtn').onclick=async()=>{const blob=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`foto-turismo-v241-${String(Date.now()).slice(-6)}.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+$('shareBtn').onclick=async()=>{const blob=await makeBlob(),file=new File([blob],'foto-turismo-v241.jpg',{type:'image/jpeg'});if(navigator.canShare?.({files:[file]}))await navigator.share({title:'Foto Turismo',text:'Minha foto turística',files:[file]});else alert('Use o botão Salvar foto neste navegador.');};
 let deferredPrompt;const installBtn=$('installBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.hidden=false});installBtn.onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.hidden=true;};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js');buildFrames();setModeUI();loadFrame(0);draw();

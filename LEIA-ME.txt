@@ -1,17 +1,12 @@
-Foto Turismo V2.4
+Foto Turismo V2.4.1 — correção de carregamento das molduras 3D
 
-Novidades desta versão:
-- 2 modelos de moldura Polaroid 3D para Praia do Forte:
-  1) 3D Suave
-  2) 3D Destaque
-- Nova estrutura em camadas:
-  fundo completo + foto/pessoa + moldura frontal 3D.
-- Cenário da Praia do Forte preenchendo toda a composição.
-- Mantidos os modos: Normal, Recorte automático e Chroma key.
+IMPORTANTE:
+Envie TODOS os arquivos diretamente para a página principal do repositório.
+Os cinco arquivos PNG abaixo devem aparecer ao lado do index.html:
+- praia-do-forte-3d-bg.png
+- praia-do-forte-3d-suave-front.png
+- praia-do-forte-3d-bold-front.png
+- praia-do-forte-3d-suave-thumb.png
+- praia-do-forte-3d-bold-thumb.png
 
-Para publicar:
-1. Descompacte este arquivo.
-2. Envie todos os arquivos da pasta foto_turismo_v24 para o seu repositório do GitHub Pages.
-3. Substitua os arquivos anteriores.
-4. Faça Commit changes.
-5. Atualize o site no celular.
+Não coloque esses PNGs dentro de outra pasta.

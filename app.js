@@ -45,30 +45,54 @@ async function runAISegmentation(force=false){
  const keyNow=currentProcessKey();
  if(!force&&keyNow===processKey&&processed&&processed!==photo)return;
  aiProcessing=true;aiFailed=false;const token=++aiToken;
- $('hint').textContent='Analisando a pessoa com inteligência artificial…';
+ $('hint').textContent='Analisando a pessoa…';
  try{
   const seg=await ensureSelfieSegmenter();
-  const max=1024,ratio=Math.min(1,max/Math.max(photo.width,photo.height));
-  const src=document.createElement('canvas');src.width=Math.max(1,Math.round(photo.width*ratio));src.height=Math.max(1,Math.round(photo.height*ratio));
-  const sc=src.getContext('2d',{willReadFrequently:true});sc.drawImage(photo,0,0,src.width,src.height);
-  const result=await new Promise((resolve,reject)=>{let timer=setTimeout(()=>reject(new Error('Tempo excedido no recorte.')),20000);seg.onResults(r=>{clearTimeout(timer);resolve(r)});seg.send({image:src}).catch(reject);});
+  // 512 px is enough for the mask and avoids browser memory errors on phones.
+  const max=512,ratio=Math.min(1,max/Math.max(photo.width,photo.height));
+  const src=document.createElement('canvas');
+  src.width=Math.max(1,Math.round(photo.width*ratio));
+  src.height=Math.max(1,Math.round(photo.height*ratio));
+  const sc=src.getContext('2d',{alpha:true});
+  sc.drawImage(photo,0,0,src.width,src.height);
+  const result=await new Promise((resolve,reject)=>{
+   let settled=false;
+   const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error('Tempo excedido no recorte.'));}},15000);
+   seg.onResults(r=>{if(!settled){settled=true;clearTimeout(timer);resolve(r);}});
+   Promise.resolve(seg.send({image:src})).catch(err=>{if(!settled){settled=true;clearTimeout(timer);reject(err);}});
+  });
   if(token!==aiToken||mode!=='auto')return;
-  const mc=document.createElement('canvas');mc.width=src.width;mc.height=src.height;const mg=mc.getContext('2d',{willReadFrequently:true});mg.drawImage(result.segmentationMask,0,0,mc.width,mc.height);
-  const sd=sc.getImageData(0,0,src.width,src.height),md=mg.getImageData(0,0,src.width,src.height).data;
-  const preserve=+$('autoSensitivity').value;const softness=+$('autoSoftness').value;
-  const threshold=Math.max(.18,Math.min(.72,.53-(preserve-95)*.0027));
-  const feather=.025+softness/100*0.18;
-  const alpha=new Uint8Array(src.width*src.height);
-  for(let p=0,i=0;p<alpha.length;p++,i+=4){const prob=md[i]/255;alpha[p]=Math.round(255*smoothstep(threshold-feather,threshold+feather,prob));}
-  let cleaned=alpha;const passes=+$('cleanup').value;
-  if(passes>0)cleaned=morph(alpha,src.width,src.height,Math.min(2,passes));
-  // Combine the AI mask with the original soft mask to avoid holes in skin, glasses and clothes.
-  for(let p=0,i=0;p<cleaned.length;p++,i+=4){let a=Math.max(cleaned[p],alpha[p]);if(a>18&&a<245)a=Math.min(255,a+24);sd.data[i+3]=Math.min(sd.data[i+3],a);}
-  sc.putImageData(sd,0,0);processed=src;alphaBounds=findBounds(sd.data,src.width,src.height);processKey=keyNow;
-  $('hint').textContent='Arraste a pessoa com um dedo. Use “Ajustar pessoa” para centralizar.';
+
+  // Use MediaPipe's soft mask directly instead of thresholding it.
+  // This preserves skin, glasses, hair and clothing and prevents white holes.
+  const out=document.createElement('canvas');
+  out.width=src.width;out.height=src.height;
+  const og=out.getContext('2d',{alpha:true,willReadFrequently:true});
+  og.clearRect(0,0,out.width,out.height);
+  og.drawImage(src,0,0);
+  og.globalCompositeOperation='destination-in';
+  og.filter=`blur(${Math.min(1.6,(+$('autoSoftness').value)/70)}px)`;
+  og.drawImage(result.segmentationMask,0,0,out.width,out.height);
+  og.filter='none';
+  og.globalCompositeOperation='source-over';
+
+  const data=og.getImageData(0,0,out.width,out.height);
+  // Very small alpha values are only haze; remove them without cutting the person.
+  for(let i=3;i<data.data.length;i+=4){
+   const a=data.data[i];
+   data.data[i]=a<8?0:(a>244?255:a);
+  }
+  og.putImageData(data,0,0);
+  processed=out;
+  alphaBounds=findBounds(data.data,out.width,out.height);
+  processKey=keyNow;
+  $('hint').textContent='Recorte concluído. Arraste a pessoa ou use “Ajustar pessoa”.';
   autoFitPerson(true);
- }catch(err){console.error(err);aiFailed=true;processed=photo;alphaBounds=null;$('hint').textContent='Não foi possível carregar a IA. Use Chroma key ou verifique a internet.';draw();}
- finally{aiProcessing=false;}
+ }catch(err){
+  console.error(err);aiFailed=true;processed=photo;alphaBounds=null;
+  $('hint').textContent='O celular não conseguiu concluir o recorte. Tente uma foto menor ou use Chroma key.';
+  draw();
+ }finally{aiProcessing=false;}
 }
 function processPhoto(){
  if(!photo||mode==='normal'){processed=photo;alphaBounds=null;return;}
@@ -90,7 +114,34 @@ function autoFitPerson(fromAI=false){if(!photo||mode==='normal'){fitPhoto();retu
 function drawContinuation(x1,y1,x2,y2){const w=x2-x1,h=y2-y1;if(!baseImg.complete)return;ctx.save();ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();ctx.drawImage(baseImg,0,0,canvas.width,canvas.height);const grad=ctx.createLinearGradient(x1,y1,x2,y1);grad.addColorStop(0,'rgba(255,255,255,.06)');grad.addColorStop(.5,'rgba(255,255,255,.28)');grad.addColorStop(1,'rgba(255,255,255,.06)');ctx.fillStyle=grad;ctx.fillRect(x1,y1,w,h);ctx.restore();}
 function drawBackground(x1,y1,x2,y2){const m=$('backgroundMode').value,w=x2-x1,h=y2-y1;if(mode==='normal')return;if(m==='continuation')drawContinuation(x1,y1,x2,y2);else if(m==='blur'&&photo){ctx.save();ctx.beginPath();ctx.rect(x1,y1,w,h);ctx.clip();ctx.filter='blur(25px) brightness(82%)';const s=Math.max(w/photo.width,h/photo.height)*1.18;ctx.drawImage(photo,(x1+x2)/2-photo.width*s/2,(y1+y2)/2-photo.height*s/2,photo.width*s,photo.height*s);ctx.restore();ctx.filter='none';}else if(m==='white'){ctx.fillStyle='#fff';ctx.fillRect(x1,y1,w,h);}}
 function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);const [x1,y1,x2,y2]=frames[frameIndex].box;drawBackground(x1,y1,x2,y2);if(photo){processPhoto();ctx.save();ctx.beginPath();ctx.rect(x1,y1,x2-x1,y2-y1);ctx.clip();ctx.filter=`brightness(${brightnessEl.value}%) contrast(${contrastEl.value}%)`;ctx.shadowColor='rgba(0,0,0,.42)';ctx.shadowBlur=mode==='normal'?0:+shadowEl.value;ctx.shadowOffsetY=mode==='normal'?0:+shadowEl.value*.32;ctx.translate((x1+x2)/2+offsetX,(y1+y2)/2+offsetY);ctx.rotate(rotation*Math.PI/180);const s=scale*+zoomEl.value;const pw=processed.width||photo.width,ph=processed.height||photo.height;ctx.drawImage(processed,-pw*s/2,-ph*s/2,pw*s,ph*s);ctx.restore();ctx.filter='none';}if(overlayImg.complete)ctx.drawImage(overlayImg,0,0,canvas.width,canvas.height);}
-function loadFile(file){if(!file)return;const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{photo=img;processed=img;alphaBounds=null;aiToken++;invalidate();fitPhoto();URL.revokeObjectURL(url)};img.src=url;}
+function loadFile(file){
+ if(!file)return;
+ const url=URL.createObjectURL(file),img=new Image();
+ img.onload=async()=>{
+  try{
+   // Keep enough detail for export while preventing large phone photos from exhausting RAM.
+   const maxSide=2048,ratio=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+   if(ratio<1){
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(img.naturalWidth*ratio));
+    c.height=Math.max(1,Math.round(img.naturalHeight*ratio));
+    c.getContext('2d',{alpha:false}).drawImage(img,0,0,c.width,c.height);
+    const blob=await new Promise(resolve=>c.toBlob(resolve,'image/jpeg',.92));
+    const reducedUrl=URL.createObjectURL(blob);
+    const reduced=new Image();
+    reduced.onload=()=>{
+     photo=reduced;processed=reduced;alphaBounds=null;aiToken++;invalidate();fitPhoto();
+     URL.revokeObjectURL(reducedUrl);
+    };
+    reduced.src=reducedUrl;
+   }else{
+    photo=img;processed=img;alphaBounds=null;aiToken++;invalidate();fitPhoto();
+   }
+  }finally{URL.revokeObjectURL(url);}
+ };
+ img.onerror=()=>{URL.revokeObjectURL(url);alert('Não foi possível abrir esta foto.');};
+ img.src=url;
+}
 cameraInput.onchange=e=>loadFile(e.target.files[0]);galleryInput.onchange=e=>loadFile(e.target.files[0]);
 [zoomEl,brightnessEl,contrastEl,shadowEl].forEach(e=>e.oninput=draw);
 [$('tolerance'),$('softness'),$('spill')].forEach(e=>e.oninput=()=>{invalidate();draw()});
@@ -105,7 +156,7 @@ canvas.addEventListener('pointerdown',e=>{if(pickingColor&&photo){const r=canvas
 canvas.addEventListener('pointermove',e=>{if(!dragging||!photo)return;const sx=canvas.width/canvas.clientWidth,sy=canvas.height/canvas.clientHeight;offsetX+=(e.offsetX-lastX)*sx;offsetY+=(e.offsetY-lastY)*sy;lastX=e.offsetX;lastY=e.offsetY;draw();});
 canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
 async function makeBlob(){return new Promise(r=>canvas.toBlob(r,'image/jpeg',.96));}
-$('saveBtn').onclick=async()=>{const blob=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`foto-turismo-v22-${String(Date.now()).slice(-6)}.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
-$('shareBtn').onclick=async()=>{const blob=await makeBlob(),file=new File([blob],'foto-turismo-v22.jpg',{type:'image/jpeg'});if(navigator.canShare?.({files:[file]}))await navigator.share({title:'Foto Turismo',text:'Minha foto turística',files:[file]});else alert('Use o botão Salvar foto neste navegador.');};
+$('saveBtn').onclick=async()=>{const blob=await makeBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`foto-turismo-v23-${String(Date.now()).slice(-6)}.jpg`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+$('shareBtn').onclick=async()=>{const blob=await makeBlob(),file=new File([blob],'foto-turismo-v23.jpg',{type:'image/jpeg'});if(navigator.canShare?.({files:[file]}))await navigator.share({title:'Foto Turismo',text:'Minha foto turística',files:[file]});else alert('Use o botão Salvar foto neste navegador.');};
 let deferredPrompt;const installBtn=$('installBtn');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.hidden=false});installBtn.onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;installBtn.hidden=true;};
 if('serviceWorker' in navigator)navigator.serviceWorker.register('service-worker.js');buildFrames();setModeUI();loadFrame(0);draw();

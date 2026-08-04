@@ -1,4 +1,4 @@
-FOTO TURISMO V2.2
+FOTO TURISMO V2.3
 
 Novidades:
 - enquadramento Preencher/Foto completa no modo normal;
@@ -10,3 +10,6 @@ Novidades:
 - cache do aplicativo atualizado para evitar carregar a versão anterior.
 
 Para atualizar no GitHub, substitua todos os arquivos anteriores pelos desta pasta e faça Commit changes.
+
+
+V2.3: recorte por máscara suave direta e redução automática de fotos grandes para evitar insuficiência de memória.

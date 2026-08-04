@@ -1,0 +1,9 @@
+FOTO TURISMO V1.0
+
+1. Publique esta pasta em um serviço HTTPS, como GitHub Pages ou Firebase Hosting.
+2. Abra o endereço no celular.
+3. Use Fotografar ou Galeria.
+4. Escolha a moldura, arraste a fotografia e ajuste o zoom.
+5. Salve ou compartilhe.
+
+Observação: câmera e instalação PWA exigem HTTPS, exceto em localhost.

@@ -1,15 +1,21 @@
-Foto Turismo V2.5
+Foto Turismo V3.0 — teste de recorte online
 
-Novidades desta versão:
-- Recorte automático melhorado, com limpeza de halo.
-- Qualidade do recorte: Rápido ou Alta qualidade.
-- Ferramenta manual "Refinar recorte" com Apagar e Restaurar.
-- Mistura com a areia e sombra de contato.
-- Mantidos os 2 modelos de Polaroid 3D para Praia do Forte.
+Esta versão envia a foto para a API remove.bg e recebe de volta um PNG transparente somente com a pessoa recortada.
 
-Como publicar:
-1. Descompacte o arquivo ZIP.
-2. Envie todos os arquivos da pasta foto_turismo_v25 para a raiz do repositório no GitHub.
-3. Substitua os arquivos anteriores.
-4. Faça Commit changes.
-5. Limpe o cache do site se necessário e reabra o app.
+Como testar:
+1. Crie uma conta no remove.bg.
+2. Copie sua API Key nas configurações da conta.
+3. Publique todos os arquivos desta pasta na raiz do repositório GitHub Pages.
+4. Abra o app, escolha "Recorte online IA".
+5. Cole a chave no campo indicado.
+6. Fotografe ou selecione uma imagem.
+7. Toque em "Recortar pela IA online".
+
+Segurança:
+- A chave não está dentro dos arquivos do aplicativo.
+- Ela é salva somente no armazenamento local do navegador usado no teste.
+- Para uso público/comercial, o ideal é criar um pequeno backend/proxy para ocultar a chave.
+
+Observação:
+- A foto é enviada para o serviço online de remoção de fundo.
+- É necessário acesso à internet.

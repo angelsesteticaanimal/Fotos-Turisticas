@@ -1,10 +1,12 @@
-FOTO TURISMO V2.0
+FOTO TURISMO V2.1
 
 Novidades:
-- Modo normal
-- Chroma key com cor, tolerância, suavidade e redução de reflexo verde
-- Recorte automático experimental baseado no fundo dos cantos
-- Fundo com continuação da moldura, foto desfocada, branco ou transparente
-- Sombra para integrar a pessoa ao cenário
+- enquadramento Preencher/Foto completa no modo normal;
+- botão Foto original;
+- ajuste automático de tamanho e posição da pessoa;
+- recorte automático por fundo conectado às bordas;
+- limpeza e suavização de bordas;
+- chroma key com conta-gotas, tolerância, suavidade e redução de reflexo;
+- cache do aplicativo atualizado para evitar carregar a versão anterior.
 
-Observação: o recorte automático funciona no próprio aparelho e não envia fotos para servidor. Para cabelos e fundos complexos, o chroma key com boa iluminação produz o melhor resultado.
+Para atualizar no GitHub, substitua todos os arquivos anteriores pelos desta pasta e faça Commit changes.

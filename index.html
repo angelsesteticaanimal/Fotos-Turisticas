@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#087ea4" />
-  <title>Foto Turismo V3.0</title>
+  <title>Foto Turismo V3.2</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <header>
-  <div><strong>Foto Turismo</strong><small>V3.0 • Recorte online por IA • Polaroid 3D</small></div>
+  <div><strong>Foto Turismo</strong><small>V3.2 • Modos Pessoa, Grupo e Automático • Polaroid 3D</small></div>
   <button id="installBtn" hidden>Instalar</button>
 </header>
 <main>
@@ -34,7 +34,7 @@
     <h2>Modo da fotografia</h2>
     <div class="segmented" id="modeButtons">
       <button data-mode="normal" class="active">Normal</button>
-      <button data-mode="online">☁️ Recorte online IA</button>
+      <button data-mode="online">☁️ Meu servidor IA</button>
       <button data-mode="chroma">🟩 Chroma key</button>
     </div>
 
@@ -55,7 +55,7 @@
           <option value="white">Branco</option>
         </select>
       </label>
-      <label><input id="sandBlend" type="checkbox" checked /> Misturar os pés com a areia</label>
+      <label><input id="sandBlend" type="checkbox" checked /> Misturar a base com a areia</label>
       <label><input id="contactShadow" type="checkbox" checked /> Sombra de contato no chão</label>
     </div>
 
@@ -69,19 +69,29 @@
     </div>
 
     <div id="onlinePanel" class="panel" hidden>
-      <p>A foto será enviada ao remove.bg e retornará como PNG transparente, somente com a pessoa recortada.</p>
-      <label>Chave da API remove.bg
-        <input id="onlineApiKey" type="password" autocomplete="off" placeholder="Cole sua API Key" />
+      <p>A foto será enviada ao seu próprio servidor e retornará como PNG transparente somente com a pessoa recortada.</p>
+      <label>Endereço do servidor
+        <input id="serverUrl" type="url" autocomplete="off" placeholder="https://seu-tunel.trycloudflare.com" />
       </label>
-      <label>Qualidade enviada
-        <select id="onlineSize">
-          <option value="preview">Teste rápido/econômico</option>
-          <option value="auto" selected>Qualidade automática</option>
-          <option value="full">Qualidade máxima</option>
+      <label>Chave de acesso do servidor
+        <input id="serverToken" type="password" autocomplete="off" placeholder="Cole a chave do arquivo .env" />
+      </label>
+      <label>Tipo da foto
+        <select id="subjectMode">
+          <option value="auto" selected>Automático — testa alternativas</option>
+          <option value="single">Pessoa única</option>
+          <option value="group">Grupo / várias pessoas</option>
         </select>
       </label>
-      <button id="onlineRemoveBtn" class="primary">☁️ Recortar pela IA online</button>
-      <p id="onlineStatus">A chave fica salva somente neste navegador.</p>
+      <label>Qualidade
+        <select id="onlineQuality">
+          <option value="normal" selected>Normal — mais estável</option>
+          <option value="premium">Premium — usa Normal se falhar</option>
+        </select>
+      </label>
+      <label><input id="saveFinalToServer" type="checkbox" checked /> Ao salvar a montagem, enviar a foto final também ao servidor</label>
+      <button id="onlineRemoveBtn" class="primary">☁️ Recortar pelo meu servidor</button>
+      <p id="onlineStatus">A URL e a chave ficam salvas somente neste navegador.</p>
     </div>
 
     <div id="refinePanel" class="panel" hidden>
@@ -112,7 +122,7 @@
     </div>
   </section>
 </main>
-<footer>Versão 3.0 • Recorte online por IA • Praia do Forte 3D</footer>
+<footer>Versão 3.2 • Automático, Pessoa única e Grupo • Guarda arquivos por 3 dias</footer>
 <script src="app.js"></script>
 </body>
 </html>

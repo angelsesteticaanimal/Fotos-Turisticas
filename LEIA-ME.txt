@@ -1,21 +1,16 @@
-Foto Turismo V3.0 — teste de recorte online
+FOTO TURISMO V3.2
 
-Esta versão envia a foto para a API remove.bg e recebe de volta um PNG transparente somente com a pessoa recortada.
+Novidades:
+- Integração com o Servidor Recorte IA V2.1.
+- Tipos de foto: Automático, Pessoa única e Grupo/várias pessoas.
+- O servidor informa qual modelo e qualidade foram usados.
+- Mensagens melhores quando o servidor não retorna uma imagem válida.
+- Original, recortada e final continuam armazenadas por 3 dias.
 
-Como testar:
-1. Crie uma conta no remove.bg.
-2. Copie sua API Key nas configurações da conta.
-3. Publique todos os arquivos desta pasta na raiz do repositório GitHub Pages.
-4. Abra o app, escolha "Recorte online IA".
-5. Cole a chave no campo indicado.
-6. Fotografe ou selecione uma imagem.
-7. Toque em "Recortar pela IA online".
+Para fotos complexas com várias pessoas:
+- Tipo da foto: Grupo / várias pessoas
+- Qualidade: Normal — mais estável
 
-Segurança:
-- A chave não está dentro dos arquivos do aplicativo.
-- Ela é salva somente no armazenamento local do navegador usado no teste.
-- Para uso público/comercial, o ideal é criar um pequeno backend/proxy para ocultar a chave.
-
-Observação:
-- A foto é enviada para o serviço online de remoção de fundo.
-- É necessário acesso à internet.
+Para uso geral:
+- Tipo da foto: Automático
+- Qualidade: Normal — mais estável

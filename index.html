@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#087ea4" />
-  <title>Foto Turismo V3.2</title>
+  <title>Foto Turismo V3.2.1</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <header>
-  <div><strong>Foto Turismo</strong><small>V3.2 • Modos Pessoa, Grupo e Automático • Polaroid 3D</small></div>
+  <div><strong>Foto Turismo</strong><small>V3.2.1 • Zoom corrigido • Pessoa, Grupo e Automático</small></div>
   <button id="installBtn" hidden>Instalar</button>
 </header>
 <main>
@@ -106,8 +106,19 @@
       <label>Força do pincel <input id="brushStrength" type="range" min="10" max="100" value="85" /></label>
     </div>
 
+    <div class="zoom-panel">
+      <strong>Tamanho da foto/pessoa</strong>
+      <div class="zoom-buttons">
+        <button id="zoomOutBtn" type="button">➖ Menor</button>
+        <button id="zoomResetBtn" type="button">100%</button>
+        <button id="zoomInBtn" type="button">➕ Maior</button>
+      </div>
+      <label>Zoom: <span id="zoomValue">100%</span>
+        <input id="zoom" type="range" min="0.10" max="6" step="0.01" value="1" />
+      </label>
+      <small>Também é possível usar dois dedos sobre a imagem para aumentar ou diminuir.</small>
+    </div>
     <div class="range-row">
-      <label>Zoom <input id="zoom" type="range" min="0.25" max="4" step="0.01" value="1" /></label>
       <label>Brilho <input id="brightness" type="range" min="60" max="140" value="100" /></label>
       <label>Contraste <input id="contrast" type="range" min="60" max="140" value="100" /></label>
       <label id="shadowLabel" hidden>Sombra <input id="shadow" type="range" min="0" max="40" value="10" /></label>
@@ -122,7 +133,7 @@
     </div>
   </section>
 </main>
-<footer>Versão 3.2 • Automático, Pessoa única e Grupo • Guarda arquivos por 3 dias</footer>
+<footer>Versão 3.2.1 • Automático, Pessoa única e Grupo • Guarda arquivos por 3 dias</footer>
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE='foto-turismo-v32';
+const CACHE='foto-turismo-v321';
 const ASSETS=[
   './','./index.html','./styles.css','./app.js','./manifest.json',
   './praia-do-forte-3d-bg.png','./praia-do-forte-3d-suave-front.png','./praia-do-forte-3d-bold-front.png',

@@ -1,16 +1,13 @@
-FOTO TURISMO V3.2
+FOTO TURISMO V3.2.3 — PUBLICAÇÃO SEM CACHE
 
-Novidades:
-- Integração com o Servidor Recorte IA V2.1.
-- Tipos de foto: Automático, Pessoa única e Grupo/várias pessoas.
-- O servidor informa qual modelo e qualidade foram usados.
-- Mensagens melhores quando o servidor não retorna uma imagem válida.
-- Original, recortada e final continuam armazenadas por 3 dias.
+Revisão realizada:
+- index.html válido e com versão V3.2.3.
+- JavaScript validado com node --check.
+- arquivos de imagem presentes.
+- referências de arquivos conferidas.
+- service worker removido para impedir que a versão V3.2 antiga continue no celular.
+- nomes de CSS e JS versionados: styles-v323.css e app-v323.js.
+- arquivo .nojekyll incluído para publicação direta no GitHub Pages.
 
-Para fotos complexas com várias pessoas:
-- Tipo da foto: Grupo / várias pessoas
-- Qualidade: Normal — mais estável
-
-Para uso geral:
-- Tipo da foto: Automático
-- Qualidade: Normal — mais estável
+Envie TODOS os arquivos desta pasta para a raiz do repositório.
+Pode apagar os arquivos antigos app.js, styles.css, service-worker.js e manifest.json depois que confirmar a V3.2.3.
